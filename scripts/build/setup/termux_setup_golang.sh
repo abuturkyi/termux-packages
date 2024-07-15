@@ -52,6 +52,6 @@ termux_setup_golang() {
 			exit 1
 		fi
 
-		export GOROOT="$TERMUX_PREFIX/lib/go"
+		export GOROOT="$TERMUX_LIB_PATH/go"
 	fi
 }

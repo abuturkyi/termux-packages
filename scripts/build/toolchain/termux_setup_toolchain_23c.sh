@@ -1,7 +1,7 @@
 termux_setup_toolchain_23c() {
 	export CFLAGS=""
 	export CPPFLAGS=""
-	export LDFLAGS="-L${TERMUX_PREFIX}/lib"
+	export LDFLAGS="-L${TERMUX_LIB_PATH}"
 
 	export AS=$TERMUX_HOST_PLATFORM-clang
 	export CC=$TERMUX_HOST_PLATFORM-clang
@@ -31,7 +31,7 @@ termux_setup_toolchain_23c() {
 		if [ $TERMUX_ARCH = arm ]; then
 			CCTERMUX_HOST_PLATFORM=armv7a-linux-androideabi$TERMUX_PKG_API_LEVEL
 		fi
-		LDFLAGS+=" -Wl,-rpath=$TERMUX_PREFIX/lib"
+		LDFLAGS+=" -Wl,-rpath=$TERMUX_LIB_PATH"
 	else
 		export CC_FOR_BUILD=$CC
 		# Some build scripts use environment variable 'PKG_CONFIG', so
@@ -100,7 +100,7 @@ termux_setup_toolchain_23c() {
 	fi
 	local env_host="${CARGO_TARGET_NAME//-/_}"
 	export CARGO_TARGET_${env_host@U}_LINKER="${CC}"
-	export CARGO_TARGET_${env_host@U}_RUSTFLAGS="-L${TERMUX_PREFIX}/lib -C link-arg=-Wl,-rpath=${TERMUX_PREFIX}/lib -C link-arg=-Wl,--enable-new-dtags"
+	export CARGO_TARGET_${env_host@U}_RUSTFLAGS="-L${TERMUX_LIB_PATH} -C link-arg=-Wl,-rpath=${TERMUX_LIB_PATH} -C link-arg=-Wl,--enable-new-dtags"
 	export CFLAGS_${env_host}="${CPPFLAGS} ${CFLAGS}"
 
 	export ac_cv_func_getpwent=no
