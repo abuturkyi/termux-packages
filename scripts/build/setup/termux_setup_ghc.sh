@@ -30,7 +30,7 @@ termux_setup_ghc() {
 			cd "$TERMUX_GHC_TEMP_FOLDER"
 			./configure --prefix="$TERMUX_GHC_RUNTIME_FOLDER"
 			make install
-		)
+		) &>/dev/null
 
 		# Cabal passes a host string to the libraries' configure scripts that isn't valid.
 		# After this patch we need to always pass --configure-option=--host=${TERMUX_HOST_PLATFORM}
