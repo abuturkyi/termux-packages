@@ -13,6 +13,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --with-system-libffi"
 TERMUX_PKG_NO_STATICSPLIT=true
 TERMUX_PKG_REPLACES="ghc-libs-static"
+TERMUX_PKG_BLACKLISTED_ARCHES="i686"
 
 termux_step_post_get_source() {
 	termux_setup_ghc && termux_setup_cabal
