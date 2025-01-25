@@ -34,24 +34,15 @@ termux_step_pre_configure() {
 }
 
 termux_step_make() {
-	# XXX: Temporary
-	termux_setup_ghc && termux_setup_cabal
 	(
 		unset CFLAGS CPPFLAGS LDFLAGS # For stage0 compilation.
-		./hadrian/build binary-dist-dir -j --flavour=quickest+no_profiled_libs --docs=none \
+		./hadrian/build binary-dist-dir -j --flavour=perf+llvm --docs=none \
 			"stage1.*.ghc.*.opts += -optl-landroid-posix-semaphore" \
 			"stage2.*.ghc.*.opts += -optl-landroid-posix-semaphore"
 	)
 }
 
 termux_step_make_install() {
-	# XXX: Temporary
-	export target="$TERMUX_HOST_PLATFORM"
-	if [ "$TERMUX_ARCH" = "arm" ]; then
-		target="armv7a-linux-androideabi"
-	fi
-	# patch -p1 <"$TERMUX_PKG_BUILDER_DIR"/use-stage1-ghc-on-host.patch
-
 	(
 		cd _build/bindist/ghc-"$TERMUX_PKG_VERSION"-"$target" || exit 1
 		CXX_STD_LIB_LIBS="c++ c++abi" ./configure --prefix="$TERMUX_PREFIX" --host="$target"
@@ -64,7 +55,7 @@ termux_step_make_install() {
 	sed -i 's/"LLVM opt command", "opt.*"/"LLVM opt command", "opt"/' \
 		"$TERMUX_PREFIX/lib/$target-ghc-$TERMUX_PKG_VERSION/lib/settings" || :
 
-	# Above `configure` script was ment to be run on device but we are running
+	# Above `configure` script was ment to be run on host(=target) but we are running
 	# on CI, therefore we need to remove cross compiler flag.
 	sed -i 's|"cross compiling", "YES"|"cross compiling", "NO"|' \
 		"$TERMUX_PREFIX/lib/$target-ghc-$TERMUX_PKG_VERSION/lib/settings" || :
