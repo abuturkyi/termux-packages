@@ -25,8 +25,11 @@ termux_step_pre_configure() {
 	export CONF_CC_OPTS_STAGE2="$CFLAGS $CPPFLAGS" CONF_GCC_LINKER_OPTS_STAGE2="$LDFLAGS"
 
 	export target="$TERMUX_HOST_PLATFORM"
+	export flavour="perf"
+
 	if [ "$TERMUX_ARCH" = "arm" ]; then
 		target="armv7a-linux-androideabi"
+		flavour+="+no_profiled_libs" # Building takes more than 6 hours, which is a constraint of our CI.
 	fi
 	TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" --target=$target"
 
@@ -36,7 +39,7 @@ termux_step_pre_configure() {
 termux_step_make() {
 	(
 		unset CFLAGS CPPFLAGS LDFLAGS # For stage0 compilation.
-		./hadrian/build binary-dist-dir -j --flavour=perf --docs=none \
+		./hadrian/build binary-dist-dir -j --flavour="$flavour" --docs=none \
 			"stage1.*.ghc.*.opts += -optl-landroid-posix-semaphore" \
 			"stage2.*.ghc.*.opts += -optl-landroid-posix-semaphore"
 	)
