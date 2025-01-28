@@ -65,6 +65,20 @@ termux_step_make_install() {
 
 }
 
+termux_step_post_massage() {
+	# Create symlinks without cross-prefix.
+	(
+		cd ./bin || exit 1
+		for pgm in ./*; do
+			test -L "$pgm" && continue
+			pgm="$(basename "$pgm")"
+			_pgm="${pgm/$target-/}"
+			ln -s "$pgm" "$_pgm"                         # With version suffix
+			ln -s "$pgm" "${_pgm/-$TERMUX_PKG_VERSION/}" # Without version suffix
+		done
+	)
+}
+
 termux_step_install_license() {
 	install -Dm600 -t "$TERMUX_PREFIX/share/doc/$TERMUX_PKG_NAME" \
 		"$TERMUX_PKG_SRCDIR/LICENSE"
