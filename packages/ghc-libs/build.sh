@@ -35,6 +35,7 @@ termux_step_pre_configure() {
 		flavour="${flavour}+no_profiled_libs"
 	elif [ "$TERMUX_ARCH" = "i686" ]; then
 		# WARNING: This should make it support `i686`, but it needs testing.
+		flavour="${flavour}+llvm"
 		sed -i -E 's|"i686-unknown-linux"|"i686-unknown-linux-android"|' llvm-targets
 	fi
 
