@@ -44,9 +44,11 @@ termux_step_pre_configure() {
 
 termux_step_make() {
 	(
+		# TODO: apply i686 specific flags for i686 build.
 		unset CFLAGS CPPFLAGS LDFLAGS # For stage0 compilation.
 		./hadrian/build binary-dist-dir -j"$TERMUX_PKG_MAKE_PROCESSES" --flavour="$flavour" --docs=none \
 			"stage1.unix.ghc.link.opts += -optl-landroid-posix-semaphore" \
+			"*.*.ghc.*.opts += -fllvm" \
 			"stage2.unix.ghc.link.opts += -optl-landroid-posix-semaphore"
 		#	"stage2.ghc-bin.ghc.link.opts += -optl-landroid-posix-semaphore"
 	)
