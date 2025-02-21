@@ -6,7 +6,6 @@ TERMUX_PKG_VERSION=9.12.1
 TERMUX_PKG_SRCURL="https://downloads.haskell.org/~ghc/$TERMUX_PKG_VERSION/ghc-$TERMUX_PKG_VERSION-src.tar.xz"
 TERMUX_PKG_SHA256=4a7410bdeec70f75717087b8f94bf5a6598fd61b3a0e1f8501d8f10be1492754
 TERMUX_PKG_DEPENDS="libiconv, libffi, libgmp, libandroid-posix-semaphore"
-TERMUX_PKG_BUILD_DEPENDS="dnsutils"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --host=$TERMUX_BUILD_TUPLE
@@ -35,7 +34,6 @@ termux_step_pre_configure() {
 		flavour="${flavour}+no_profiled_libs"
 	elif [ "$TERMUX_ARCH" = "i686" ]; then
 		# WARNING: This should make it support `i686`, but it needs testing.
-		flavour="${flavour}+llvm"
 		sed -i -E 's|"i686-unknown-linux"|"i686-unknown-linux-android"|' llvm-targets
 	fi
 
@@ -48,8 +46,7 @@ termux_step_make() {
 		unset CFLAGS CPPFLAGS LDFLAGS # For stage0 compilation.
 		./hadrian/build binary-dist-dir -j"$TERMUX_PKG_MAKE_PROCESSES" --flavour="$flavour" --docs=none \
 			"stage1.unix.ghc.link.opts += -optl-landroid-posix-semaphore" \
-			"stage1.*.ghc.*.opts += -fllvm" \
-			"stage2.*.ghc.*.opts += -fllvm" \
+			"*.*.ghc.*.opts += -fPIC" \
 			"stage2.unix.ghc.link.opts += -optl-landroid-posix-semaphore"
 		#	"stage2.ghc-bin.ghc.link.opts += -optl-landroid-posix-semaphore"
 	)
