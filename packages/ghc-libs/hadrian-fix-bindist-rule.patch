@@ -1,4 +1,6 @@
-# Enable stage2 build.
+# - Enable stage2 build.
+# - Use host ghc-pkg to recache
+# - Enable `iserv` to cross compile Haskell Template
 
 --- ghc-9.12.1/hadrian/src/Rules/Program.hs	2024-12-16 00:59:46.000000000 +0530
 +++ ghc-9.12.1.mod/hadrian/src/Rules/Program.hs	2025-01-08 14:17:07.763051325 +0530
@@ -13,8 +15,8 @@
      _ -> buildBinary rs bin ctx
 
 --- ghc-9.12.1/hadrian/src/Rules/BinaryDist.hs	2024-12-16 00:59:45.000000000 +0530
-+++ ghc-9.12.1.mod/hadrian/src/Rules/BinaryDist.hs	2025-01-18 04:49:08.850191213 +0530
-@@ -144,15 +144,15 @@
++++ ghc-9.12.1.mod/hadrian/src/Rules/BinaryDist.hs	2025-02-22 12:22:10.630203486 +0530
+@@ -144,18 +144,18 @@
      phony "binary-dist-dir" $ do
          version        <- setting ProjectVersion
          targetPlatform <- setting TargetPlatformFull
@@ -32,7 +34,11 @@
 +        all_pkgs <- stagePackages Stage2
          (lib_targets, bin_targets) <- partitionEithers <$> mapM pkgTarget all_pkgs
          cross <- flag CrossCompiling
-         iserv_targets <- if cross then pure [] else iservBins
+-        iserv_targets <- if cross then pure [] else iservBins
++        iserv_targets <- iservBins
+ 
+         let lib_exe_targets = (lib_targets ++ (map (\(_, p) -> p) (bin_targets ++ iserv_targets)))
+ 
 @@ -231,8 +231,8 @@
          --
          -- N.B. the ghc-pkg executable may be prefixed with a target triple
@@ -74,15 +80,36 @@
          return (Right (pkg, path))
  
  useGhcPrefix :: Package -> Bool
-@@ -433,7 +433,7 @@
+@@ -428,12 +428,13 @@
+     if  -- ghc also has the ghci script wrapper
+         -- N.B. programName would add the crossPrefix therefore we must do the
+         -- same here.
+-      | pkg == ghc    -> pure $ map (prefix++) ["ghc", "ghci"]
+-      | pkg == runGhc -> pure $ map (prefix++) ["runghc", "runhaskell"]
++      | pkg == ghc    -> pure ["ghc", "ghci"]
++      | pkg == runGhc -> pure ["runghc", "runhaskell"]
          -- These are the packages which we want to expose to the user and hence
          -- there are wrappers installed in the bindist.
-       | pkg `elem` [hpcBin, haddock, hp2ps, hsc2hs, ghc, ghcPkg]
+-      | pkg `elem` [hpcBin, haddock, hp2ps, hsc2hs, ghc, ghcPkg]
 -                      -> (:[]) <$> (programName =<< programContext Stage1 pkg)
-+                      -> (:[]) <$> (programName =<< programContext Stage2 pkg)
++      | pkg `elem` [hpcBin, haddock, hp2ps, hsc2hs, ghc, ghcPkg] -> do
++                      name <- programName =<< programContext Stage2 pkg
++                      pure [if prefix `isPrefixOf` name then drop (length prefix) name else name]
        | otherwise     -> pure []
  
  wrapper :: FilePath -> Action String
+@@ -487,9 +488,9 @@
+ --   explicitly and 'need' the result of building them.
+ iservBins :: Action [(Package, FilePath)]
+ iservBins = do
+-  rtsways <- interpretInContext (vanillaContext Stage1 ghc) getRtsWays
++  rtsways <- interpretInContext (vanillaContext Stage2 ghc) getRtsWays
+   traverse (fmap (\p -> (iserv, p)) . programPath)
+-      [ Context Stage1 iserv w Final
++      [ Context Stage2 iserv w Final
+       | w <- [vanilla, profiling, dynamic]
+       , w `elem` rtsways
+       ]
 
 --- ghc-9.12.1/hadrian/bindist/Makefile	2024-12-16 00:59:45.000000000 +0530
 +++ ghc-9.12.1.mod/hadrian/bindist/Makefile	2025-01-18 02:46:21.665571888 +0530

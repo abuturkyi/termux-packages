@@ -14,6 +14,12 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 TERMUX_PKG_REPLACES="ghc-libs-static"
 TERMUX_PKG_NO_STATICSPLIT=true
 
+# TODO: Fix it.
+# Has relocation error: `ld.lld: error: relocation R_386_32 cannot be used`
+# No matter what I tried, it does not get fixed. Maybe somewhere, something removes or ignore -fPIC flag.
+# Will try again later.
+TERMUX_PKG_BLACKLISTED_ARCHES="i686"
+
 termux_step_pre_configure() {
 	termux_setup_ghc && termux_setup_cabal
 
@@ -26,15 +32,11 @@ termux_step_pre_configure() {
 	export CONF_CXX_OPTS_STAGE2="$CXXFLAGS"
 
 	export target="$TERMUX_HOST_PLATFORM"
-	export flavour="release+split_sections"
+	# NOTE: We do not build profiled libs. It exceeds the 6 hours limit of github CI.
+	export flavour="release+split_sections+no_profiled_libs"
 
 	if [ "$TERMUX_ARCH" = "arm" ]; then
 		target="armv7a-linux-androideabi"
-		# Do not build profiled libs for `arm`. It exceeds the 6 hours limit of github CI.
-		flavour="${flavour}+no_profiled_libs"
-	elif [ "$TERMUX_ARCH" = "i686" ]; then
-		# WARNING: This should make it support `i686`, but it needs testing.
-		sed -i -E 's|"i686-unknown-linux"|"i686-unknown-linux-android"|' llvm-targets
 	fi
 
 	TERMUX_PKG_EXTRA_CONFIGURE_ARGS="$TERMUX_PKG_EXTRA_CONFIGURE_ARGS --target=$target"
@@ -42,13 +44,10 @@ termux_step_pre_configure() {
 
 termux_step_make() {
 	(
-		# TODO: apply i686 specific flags for i686 build.
 		unset CFLAGS CPPFLAGS LDFLAGS # For stage0 compilation.
 		./hadrian/build binary-dist-dir -j"$TERMUX_PKG_MAKE_PROCESSES" --flavour="$flavour" --docs=none \
 			"stage1.unix.ghc.link.opts += -optl-landroid-posix-semaphore" \
-			"*.*.ghc.*.opts += -fPIC" \
 			"stage2.unix.ghc.link.opts += -optl-landroid-posix-semaphore"
-		#	"stage2.ghc-bin.ghc.link.opts += -optl-landroid-posix-semaphore"
 	)
 }
 
