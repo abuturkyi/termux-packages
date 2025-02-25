@@ -1,0 +1,40 @@
+# Enable `iserv` to cross compile Haskell Template:
+
+--- ghc-9.12.1/hadrian/src/Settings/Default.hs	2024-12-16 00:59:46.000000000 +0530
++++ ghc-9.12.1.mod/hadrian/src/Settings/Default.hs	2025-02-23 17:29:17.939701196 +0530
+@@ -171,12 +171,12 @@
+         , transformers
+         , unlit
+         , xhtml
++        , iserv
+         , if winTarget then win32 else unix
+         ]
+       , when (not cross)
+         [ haddock
+-        , hpcBin
+-        , iserv
++        , hpcBin 
+         , runGhc
+         , ghcToolchainBin
+         ]
+
+--- ghc-9.12.1/hadrian/src/Rules/BinaryDist.hs	2025-02-24 22:46:43.666788988 +0530
++++ ghc-9.12.1.mod/hadrian/src/Rules/BinaryDist.hs	2025-02-25 16:52:27.403800362 +0530
+@@ -155,7 +155,7 @@
+         all_pkgs <- stagePackages Stage1
+         (lib_targets, bin_targets) <- partitionEithers <$> mapM pkgTarget all_pkgs
+         cross <- flag CrossCompiling
+-        iserv_targets <- if cross then pure [] else iservBins
++        iserv_targets <- iservBins
+ 
+         let lib_exe_targets = (lib_targets ++ (map (\(_, p) -> p) (bin_targets ++ iserv_targets)))
+ 
+@@ -487,7 +487,7 @@
+ --   explicitly and 'need' the result of building them.
+ iservBins :: Action [(Package, FilePath)]
+ iservBins = do
+-  rtsways <- interpretInContext (vanillaContext Stage1 ghc) getRtsWays
++  rtsways <- interpretInContext (vanillaContext Stage2 ghc) getRtsWays
+   traverse (fmap (\p -> (iserv, p)) . programPath)
+       [ Context Stage1 iserv w Final
+       | w <- [vanilla, profiling, dynamic]

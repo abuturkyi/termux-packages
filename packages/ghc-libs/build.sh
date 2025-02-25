@@ -14,12 +14,6 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 TERMUX_PKG_REPLACES="ghc-libs-static"
 TERMUX_PKG_NO_STATICSPLIT=true
 
-# TODO: Fix it.
-# Has relocation error: `ld.lld: error: relocation R_386_32 cannot be used`
-# No matter what I tried, it does not get fixed. Maybe somewhere, something removes or ignore -fPIC flag.
-# Will try again later.
-TERMUX_PKG_BLACKLISTED_ARCHES="i686"
-
 termux_step_pre_configure() {
 	termux_setup_ghc && termux_setup_cabal
 
@@ -32,11 +26,16 @@ termux_step_pre_configure() {
 	export CONF_CXX_OPTS_STAGE2="$CXXFLAGS"
 
 	export target="$TERMUX_HOST_PLATFORM"
-	# NOTE: We do not build profiled libs. It exceeds the 6 hours limit of github CI.
-	export flavour="release+split_sections+no_profiled_libs"
 
-	if [ "$TERMUX_ARCH" = "arm" ]; then
+	# NOTE: We do not build profiled libs. It exceeds the 6 hours limit of github CI.
+	export flavour="release+split_sections+late_ccs+no_profiled_libs"
+
+	if [[ "$TERMUX_ARCH" == "arm" ]]; then
 		target="armv7a-linux-androideabi"
+	elif [[ "$TERMUX_ARCH" == "i686" ]]; then
+		flavour="${flavour/release/custom-i686}"
+		# Use use a custom build setting for i686.
+		cp "$TERMUX_PKG_BUILDER_DIR"/UserSettings.hs hadrian/
 	fi
 
 	TERMUX_PKG_EXTRA_CONFIGURE_ARGS="$TERMUX_PKG_EXTRA_CONFIGURE_ARGS --target=$target"
