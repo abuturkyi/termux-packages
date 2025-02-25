@@ -32,10 +32,6 @@ termux_step_pre_configure() {
 
 	if [[ "$TERMUX_ARCH" == "arm" ]]; then
 		target="armv7a-linux-androideabi"
-	elif [[ "$TERMUX_ARCH" == "i686" ]]; then
-		flavour="${flavour/release/custom-i686}"
-		# Use use a custom build setting for i686.
-		cp "$TERMUX_PKG_BUILDER_DIR"/UserSettings.hs hadrian/
 	fi
 
 	TERMUX_PKG_EXTRA_CONFIGURE_ARGS="$TERMUX_PKG_EXTRA_CONFIGURE_ARGS --target=$target"
