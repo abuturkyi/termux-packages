@@ -84,7 +84,7 @@ termux_step_post_massage() {
 	local ghclibs_dir="lib/$target-ghc-$TERMUX_PKG_VERSION"
 
 	if ! [ -d "$ghclibs_dir" ]; then
-		echo "ERROR: GHC lib directory is not at expected place. Please verify before updating."
+		echo "ERROR: GHC lib directory is not at expected place. Please verify before continuing."
 		exit 1
 	fi
 
@@ -93,7 +93,7 @@ termux_step_post_massage() {
 	sed -i -E 's|("LLVM opt command",) "opt.*"|\1 "opt"|' "$ghclibs_dir"/lib/settings
 
 	# Remove cross-prefix from settings:
-	# Why? Since we will use native compiler on the target, we don't need it.
+	# Why? Since we will use native compiler on the target, we don't need them.
 	sed -i "s|${target}-||g" "$ghclibs_dir"/lib/settings
 
 	# The second `configure` script was ment to be run on host(=target) but we are running
