@@ -58,7 +58,7 @@ termux_step_make_install() {
 		--with-system-libffi \
 		--host="$target"
 
-	HOST_GHC_PKG="$(realpath ../../stage1/bin/"$target"-ghc-pkg)" make install
+	HOST_GHC_PKG="$(realpath ../../stage1/bin/ghc-pkg)" make install
 }
 
 termux_step_install_license() {
