@@ -29,3 +29,4 @@ Developer mailing list: https://groups.io/g/termux-dev
 General chat: https://gitter.im/termux/termux or #termux on IRC/libera.chat.
 
 Developer chat: https://gitter.im/termux/dev.
+
